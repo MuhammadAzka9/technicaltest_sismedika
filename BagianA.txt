@@ -1,0 +1,102 @@
+Jawaban Bagian A Pengetahuan Dasar QA
+
+1. Perbedaan antara bug, defect dan error.
+    Error adalah kesalahan yang dilakukan oleh developer atau desainer selama fase pengembangan. Contohnya
+    yaitu developer salah menulis rumus perhitungan (a + b seharusnya a - b), lupa menutup tag HTML, 
+    atau salah menggunakan operator logika.
+    Defect adalah ketidaksesuaian antara fungsionalitas aktual dengan yang diharapkan dalam spesifikasi. 
+    Biasanya terjadi saat testing. Contohnya yaitu aplikasi seharusnya menyimpan data setelah klik "Save", 
+    tapi data tidak tersimpan meskipun tidak muncul pesan kesalahan
+    Bug adalah Defect yang ditemukan oleh penguji (tester) atau pengguna saat perangkat lunak dijalankan. 
+    Istilah "bug" lebih bersifat operasional dan digunakan setelah perangkat lunak diuji/digunakan. Contohnya
+    yaitu saat tester mencoba login dengan password valid, sistem menolak tanpa alasan. Tester melaporkan 
+    ini sebagai "bug pada fitur login"
+
+2. Regression Testing adalah jenis pengujian perangkat lunak yang memverifikasi bahwa perubahan kode terbaru 
+    (seperti perbaikan bug, penambahan fitur, atau modifikasi) tidak mengganggu fungsionalitas yang sudah ada 
+    sebelumnya. Tujuannya adalah memastikan bahwa "kode yang masih berfungsi dengan baik" tetap stabil 
+    setelah ada perubahan.
+    Regression Testing biasanya dilakukan dalam skenario berikut =
+        a. Setelah perbaikan bug, ketika developer memperbaiki fitur login maka tester menguji kembali fitur
+            terkait yaitu registrasi.
+        b. Penambahan fitur baru, ketika ada fitur pembayaran digital maka tester menguji kembali proses
+            checkout lama. 
+        c. Sebelum rilis, yaitu sebagai smoke test akhir untuk memastikan versi baru siap rilis.
+
+3. Lifecycle Bug/Defect
+    a. Ditemukan (Found) 
+        Bug diidentifikasi oleh tester, developer, atau user selama pengujian/penggunaan. Contoh yaitu tester 
+        mencoba login dengan kombinasi email dan password yang valid, tetapi sistem menampilkan 
+        error: "Invalid credentials". Tester memberikan bukti yaitu screenshot log console menampilkan
+        response API status 401
+    b. Dilaporkan (Reported)
+        Bug didokumentasikan secara formal di Jira/Trello dengan melampirkan beberapa data penting yaitu = 
+         - Judul Bug = [Login] Error "Invalid credentials" muncul meskipun password benar
+         - Step to produce
+         - Environment (OS, Browser, Versi App)
+         - Severity (Critical/Major/Minor) & Priority (High/Medium/Low)
+         - Bukti = video record, screenshot, log/error message
+        Status = New
+    c. Ditugaskan (Assigned)
+        Project Manager menetapkan bug ke developer backend karena diduga masalah validasi credential.
+        Status = Assigned
+    d. Diverifikasi (Triaged)
+        Developer memverifikasi bug tersebut dengan mencoba step to produce dan cek log database
+        password tidak cocok karena kolom password_hash tidak terupdate. Developer segera memperbaiki bug 
+        tersebut karena termasuk high impact.
+        Status = Confirmed
+    e. Diperbaiki (Fixed)
+        Developer menemukan penyebab bug yaitu fungsi hash password tidak dijalankan saat update profil. 
+        Perbaikan: Tambahkan trigger hash password di service UserService.update().
+        Deploy = Kirim patch ke environment testing (versi v2.3.1).
+        Developer memberikan catatan di Jira Fixed in commit Penyebab: password tidak di-hash setelah reset.
+        Status = Resolved
+    f. Diuji Ulang (Retested)
+        Tester melakukan testing dengan skenario awal yaitu login dengan akun yang sebelumnya gagal hingga
+        berhasil. Tester juga melakukan regression testing menguji fitur terkait ganti password. Kemudian 
+        menguji login dengan password yang salah (menampilkan error)
+        Hasil = semua berfungsi sesuai ekspektasi
+        Status = Verified
+    g. Ditutup (Closed)
+        QA Lead menutup bug dengan menambahkan komentar di tiket Jira 'Perbaikan valid di v2.3.1. 
+        Tidak ada side effect pada fitur terkait'
+        Status = Closed
+    
+4. Perbedaan Test Case dan Test Scenario =  
+    Test Scenario adalah deskripsi high-level tentang apa yang akan diuji tanpa rincian teknis. 
+    Fokus pada alur fungsional atau kondisi bisnis yang harus diverifikasi.
+    Contoh test scenario yaitu verifikasi login dengan kredensial valid.
+    Test Case adalah instruksi rinci berisi langkah-langkah teknis bagaimana menguji suatu 
+    fungsionalitas, termasuk input, output, dan kriteria pass/fail.
+    Contoh test case yaitu = 
+    Test Case ID: LOGIN_TC_001
+    Scenario: #1 (Login kredensial valid)
+    Preconditions: User terdaftar (email: user@test.com, password: P@ssw0rd)
+        Step	Action	                Test Data	        Expected Result
+        1	    Buka halaman login	    URL: /login	        Halaman login terbuka
+        2	    Masukkan email	        user@test.com	    Email terisi
+        3	    Masukkan password	    P@ssw0rd	        Password terisi (masked)
+        4	    Klik tombol "Login"	    -	                Loading spinner muncul (<2 detik)
+        5	    -	                    -	                Redirect ke /dashboard
+        6	    -	                    -	                Toast message: "Login berhasil"
+
+5. Severity dan Priority
+    Severity adalah menggambarkan seberapa besar dampak bug terhadap sistem atau fungsionalitas aplikasi.
+    Tingkatan severity yaitu =
+        - Critical = Aplikasi crash, data korup, tidak bisa login. Contohnya yaitu saat user mengklik 
+                     tombol “Login”, aplikasi langsung tertutup (crash).
+        - Major = Fungsi utama tidak berjalan, tapi aplikasi tidak crash. Contohnya yaitu fitur checkout 
+                 tidak bisa memproses pembayaran.
+        - Medium = Fungsi sekunder tidak berjalan dengan baik. Contohnya yaitu tombol "Sort" pada 
+                   daftar produk tidak berfungsi.
+        - Minor = Masalah kecil, tidak memengaruhi fungsionalitas utama. Contohnya yaitu salah ejaan pada 
+                  halaman bantuan.
+    Priority adalah menentukan seberapa cepat bug harus diperbaiki.
+    Tingkatan priority yaitu =
+        - High = Harus segera diperbaiki sebelum rilis. Contohnya yaitu logo perusahaan salah 
+                 di halaman depan menjelang peluncuran produk.
+        - Medium = Perlu diperbaiki, tapi tidak mendesak. Contohnya yaitu format tanggal salah di laporan, 
+                   tapi tetap terbaca.
+        - Low = Bisa ditunda, tidak terlalu penting. Contohnya yaitu perataan teks yang sedikit 
+                melenceng pada halaman about.
+
